@@ -4,6 +4,8 @@ import io.restassured.path.json.JsonPath;
 import static io.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
 
+import org.testng.Assert;
+
 import files.Payload;
 
 public class Basics {
@@ -26,13 +28,25 @@ public class Basics {
 		System.out.println(placeId);
 		
 		//update place
+		String newAddress = "Rua dos Espertos, 0";
+		
 		given().log().all().queryParam("key", "qaclick123").header("Content-Type", "application/json")
 		.body("{\r\n"
 				+ "    \"place_id\": \"" + placeId + "\",\r\n"
-				+ "    \"address\": \"Rua dos Espertos, 0\",\r\n"
+				+ "    \"address\": \"" + newAddress + "\",\r\n"
 				+ "    \"key\": \"qaclick123\"\r\n"
 				+ "}")
 		.when().put("maps/api/place/update/json")
 		.then().assertThat().log().all().statusCode(200).body("msg", equalTo("Address successfully updated"));
+		
+		//get place
+		String getPlaceResponse = given().log().all().queryParam("key", "qaclick123").queryParam("place_id", placeId)
+		.when().get("maps/api/place/get/json")
+		.then().assertThat().log().all().statusCode(200).extract().response().asString();
+		
+		JsonPath js1 = new JsonPath(getPlaceResponse);
+		String actualAddress = js1.getString("address");
+		System.out.println(actualAddress);
+		Assert.assertEquals(actualAddress, newAddress);
 	}
 }
